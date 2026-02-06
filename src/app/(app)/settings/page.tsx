@@ -8,7 +8,9 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Settings, MessageCircle, Copy, Check } from 'lucide-react'
+import { Settings, MessageCircle, Copy, Check, ExternalLink } from 'lucide-react'
+
+const TELEGRAM_BOT_USERNAME = 'Readnote922_bot'
 import { toast } from 'sonner'
 import { generateLinkCode } from '@/lib/telegram'
 
@@ -105,10 +107,20 @@ export default function SettingsPage() {
                 Привяжите Telegram для получения напоминаний и отправки голосовых заметок.
               </p>
               {profile?.telegram_link_code ? (
-                <div className="space-y-2">
-                  <p className="text-sm">Отправьте эту команду нашему боту в Telegram:</p>
+                <div className="space-y-3">
+                  <Button asChild className="w-full gap-2">
+                    <a
+                      href={`https://t.me/${TELEGRAM_BOT_USERNAME}?start=${profile.telegram_link_code}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Открыть бота и привязать
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </Button>
                   <div className="flex items-center gap-2">
-                    <code className="bg-muted px-3 py-2 rounded text-sm flex-1">
+                    <code className="bg-muted px-3 py-2 rounded text-xs flex-1 text-muted-foreground">
                       /start {profile.telegram_link_code}
                     </code>
                     <Button variant="outline" size="icon" onClick={copyCode}>
