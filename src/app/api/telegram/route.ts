@@ -7,10 +7,13 @@ import { addXp, updateStreak, XP_REWARDS, checkAchievements } from '@/lib/gamifi
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify Telegram webhook secret
-    const secret = request.headers.get('x-telegram-bot-api-secret-token')
-    if (!process.env.TELEGRAM_WEBHOOK_SECRET || secret !== process.env.TELEGRAM_WEBHOOK_SECRET) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    // Verify Telegram webhook secret (if configured)
+    const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET
+    if (webhookSecret) {
+      const secret = request.headers.get('x-telegram-bot-api-secret-token')
+      if (secret !== webhookSecret) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
     }
 
     const body = await request.json()
