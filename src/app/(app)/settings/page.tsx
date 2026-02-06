@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Settings, MessageCircle, Copy, Check, ExternalLink } from 'lucide-react'
+import { Settings, MessageCircle, Copy, Check, ExternalLink, Palette } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const TELEGRAM_BOT_USERNAME = 'Readnote922_bot'
 import { toast } from 'sonner'
@@ -74,6 +75,23 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Palette className="h-5 w-5" /> Оформление
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Тема</p>
+              <p className="text-sm text-muted-foreground">Светлая или тёмная</p>
+            </div>
+            <ThemeToggle />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle className="text-base">Профиль</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -95,7 +113,7 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {profile?.telegram_chat_id ? (
-            <div className="flex items-center gap-2 text-emerald-400">
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
               <Check className="h-4 w-4" />
               <span className="text-sm">Telegram привязан</span>
             </div>

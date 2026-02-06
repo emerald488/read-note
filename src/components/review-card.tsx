@@ -55,7 +55,7 @@ export function ReviewCardFlip({ card, onAnswer }: ReviewCardProps) {
                   <div className="grid grid-cols-4 gap-2 pt-4">
                     <Button
                       variant="outline"
-                      className="flex-col h-auto py-3 border-red-500/30 hover:bg-red-500/10 text-red-400"
+                      className="flex-col h-auto py-3 border-red-500/30 hover:bg-red-500/10 text-red-600 dark:text-red-400"
                       onClick={(e) => { e.stopPropagation(); onAnswer('forgot') }}
                     >
                       <RotateCcw className="h-4 w-4 mb-1" />
@@ -63,7 +63,7 @@ export function ReviewCardFlip({ card, onAnswer }: ReviewCardProps) {
                     </Button>
                     <Button
                       variant="outline"
-                      className="flex-col h-auto py-3 border-orange-500/30 hover:bg-orange-500/10 text-orange-400"
+                      className="flex-col h-auto py-3 border-orange-500/30 hover:bg-orange-500/10 text-orange-600 dark:text-orange-400"
                       onClick={(e) => { e.stopPropagation(); onAnswer('hard') }}
                     >
                       <Brain className="h-4 w-4 mb-1" />
@@ -71,7 +71,7 @@ export function ReviewCardFlip({ card, onAnswer }: ReviewCardProps) {
                     </Button>
                     <Button
                       variant="outline"
-                      className="flex-col h-auto py-3 border-green-500/30 hover:bg-green-500/10 text-green-400"
+                      className="flex-col h-auto py-3 border-green-500/30 hover:bg-green-500/10 text-green-600 dark:text-green-400"
                       onClick={(e) => { e.stopPropagation(); onAnswer('normal') }}
                     >
                       <Smile className="h-4 w-4 mb-1" />
@@ -79,7 +79,7 @@ export function ReviewCardFlip({ card, onAnswer }: ReviewCardProps) {
                     </Button>
                     <Button
                       variant="outline"
-                      className="flex-col h-auto py-3 border-blue-500/30 hover:bg-blue-500/10 text-blue-400"
+                      className="flex-col h-auto py-3 border-blue-500/30 hover:bg-blue-500/10 text-blue-600 dark:text-blue-400"
                       onClick={(e) => { e.stopPropagation(); onAnswer('easy') }}
                     >
                       <Zap className="h-4 w-4 mb-1" />

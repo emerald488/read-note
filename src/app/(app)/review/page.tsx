@@ -54,7 +54,7 @@ export default function ReviewPage() {
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
           <Card className="border-emerald-500/20 bg-emerald-500/[0.04]">
             <CardContent className="p-16 text-center">
-              <CheckCircle2 className="h-14 w-14 mx-auto mb-4 text-emerald-400" />
+              <CheckCircle2 className="h-14 w-14 mx-auto mb-4 text-emerald-600 dark:text-emerald-400" />
               <h2 className="text-xl font-bold mb-2">Все карточки повторены!</h2>
               <p className="text-sm text-muted-foreground mb-6">Отличная работа! Возвращайтесь завтра.</p>
               <Button onClick={refetch} variant="outline" className="gap-2">

@@ -53,22 +53,22 @@ export function ReadingChart() {
     <div className="h-[200px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data}>
-          <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#888', fontSize: 12 }} />
+          <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }} />
           <YAxis hide />
           <Tooltip
             contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
+              backgroundColor: 'var(--card)',
+              border: '1px solid var(--border)',
               borderRadius: '8px',
-              color: 'hsl(var(--foreground))',
+              color: 'var(--foreground)',
             }}
             formatter={(value) => [`${value} стр.`, 'Прочитано']}
           />
           <Bar dataKey="pages" fill="url(#gradient)" radius={[4, 4, 0, 0]} />
           <defs>
             <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#f97316" />
-              <stop offset="100%" stopColor="#ef4444" />
+              <stop offset="0%" stopColor="var(--primary)" />
+              <stop offset="100%" stopColor="var(--chart-2)" />
             </linearGradient>
           </defs>
         </BarChart>

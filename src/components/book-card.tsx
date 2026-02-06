@@ -9,9 +9,9 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 
 const statusConfig = {
-  reading: { label: 'Читаю', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25', icon: BookOpen },
+  reading: { label: 'Читаю', color: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25', icon: BookOpen },
   finished: { label: 'Прочитано', color: 'bg-primary/15 text-primary border-primary/25', icon: CheckCircle2 },
-  paused: { label: 'Пауза', color: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/25', icon: Pause },
+  paused: { label: 'Пауза', color: 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border-yellow-500/25', icon: Pause },
   want: { label: 'Хочу прочитать', color: 'bg-muted-foreground/15 text-muted-foreground border-muted-foreground/25', icon: BookMarked },
 }
 

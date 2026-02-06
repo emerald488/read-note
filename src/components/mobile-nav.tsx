@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, BookOpen, FileText, Brain, Trophy } from 'lucide-react'
+import { LayoutDashboard, BookOpen, FileText, Brain, Trophy, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { href: '/notes', label: 'Заметки', icon: FileText },
   { href: '/review', label: 'Повтор', icon: Brain },
   { href: '/achievements', label: 'Медали', icon: Trophy },
+  { href: '/settings', label: 'Ещё', icon: Settings },
 ]
 
 export function MobileNav() {
@@ -26,7 +27,7 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                'relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-xs transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                'relative flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl text-xs transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 isActive
                   ? 'text-primary'
                   : 'text-muted-foreground active:scale-95'

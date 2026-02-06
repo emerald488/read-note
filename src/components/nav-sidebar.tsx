@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, BookOpen, FileText, Brain, Trophy, Settings, LogOut } from 'lucide-react'
+import { LayoutDashboard, BookOpen, FileText, Brain, Trophy, Settings, LogOut, Palette } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const navItems = [
   { href: '/dashboard', label: 'Главная', icon: LayoutDashboard },
@@ -54,7 +55,14 @@ export function NavSidebar() {
           )
         })}
       </nav>
-      <div className="p-3 border-t border-border">
+      <div className="p-3 border-t border-border space-y-0.5">
+        <div className="flex items-center gap-3 px-3 py-1.5 text-sm font-medium text-muted-foreground">
+          <Palette className="h-5 w-5" />
+          <span>Тема</span>
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
+        </div>
         <button
           onClick={handleLogout}
           aria-label="Выйти из аккаунта"

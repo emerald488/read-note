@@ -1,4 +1,5 @@
 import OpenAI from 'openai'
+import { PROMPTS } from './prompts'
 
 function getOpenAI() {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -21,7 +22,7 @@ export async function formatNote(rawText: string, bookTitle?: string): Promise<s
     messages: [
       {
         role: 'system',
-        content: `Ты помощник для ведения читательского дневника. Переформатируй заметку${context} в структурированный, читаемый вид. Сохрани все ключевые мысли, добавь структуру с заголовками если уместно. Используй markdown. Отвечай на русском.`,
+        content: PROMPTS.formatNote(context),
       },
       { role: 'user', content: rawText },
     ],
@@ -40,7 +41,7 @@ export async function generateReviewCards(
     messages: [
       {
         role: 'system',
-        content: `На основе заметки${context} создай 2-5 карточек для повторения материала. Каждая карточка содержит вопрос и краткий ответ. Вопросы должны быть разного типа: фактические, на понимание, на применение. Отвечай в формате JSON массива: [{"question": "...", "answer": "..."}]. Отвечай на русском. Ничего кроме JSON не пиши.`,
+        content: PROMPTS.generateReviewCards(context),
       },
       { role: 'user', content: noteText },
     ],
