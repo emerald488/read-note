@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useProfile } from '@/hooks/use-profile'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,15 +16,12 @@ import { generateLinkCode } from '@/lib/telegram'
 
 export default function SettingsPage() {
   const { profile, loading, refetch } = useProfile()
-  const [username, setUsername] = useState('')
+  const [editedUsername, setEditedUsername] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  useEffect(() => {
-    if (profile) {
-      setUsername(profile.username || '')
-    }
-  }, [profile])
+  const username = editedUsername ?? profile?.username ?? ''
+  const setUsername = (value: string) => setEditedUsername(value)
 
   const handleSave = async () => {
     if (!profile) return
@@ -82,7 +79,7 @@ export default function SettingsPage() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Имя пользователя</Label>
-            <Input value={username} onChange={(e) => setUsername(e.target.value)} />
+            <Input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
           </div>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? 'Сохранение...' : 'Сохранить'}
@@ -98,9 +95,9 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {profile?.telegram_chat_id ? (
-            <div className="flex items-center gap-2 text-green-400">
+            <div className="flex items-center gap-2 text-emerald-400">
               <Check className="h-4 w-4" />
-              <span>Telegram привязан</span>
+              <span className="text-sm">Telegram привязан</span>
             </div>
           ) : (
             <>

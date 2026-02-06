@@ -41,9 +41,9 @@ export function useBooks(statusFilter?: string) {
     setLoading(false)
   }, [statusFilter])
 
-  useEffect(() => {
-    fetchBooks()
-  }, [fetchBooks])
+  // Data fetching on mount — async setState is intentional
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchBooks() }, [fetchBooks])
 
   const addBook = async (book: { title: string; author?: string; total_pages?: number; status?: string }) => {
     const supabase = createClient()

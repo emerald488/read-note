@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { NoteCard } from '@/components/note-card'
 import { Card, CardContent } from '@/components/ui/card'
@@ -17,21 +18,36 @@ import { addXp, updateStreak, XP_REWARDS, checkAchievements } from '@/lib/gamifi
 import { Book } from '@/hooks/use-books'
 
 export default function NotesPage() {
-  const [notes, setNotes] = useState<any[]>([])
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const [notes, setNotes] = useState<{ id: string; formatted_text: string | null; manual_text: string | null; source: 'voice' | 'manual'; page_reference: number | null; created_at: string; book?: { title: string } | null }[]>([])
   const [books, setBooks] = useState<Book[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('q') || '')
+
+  const syncSearchToUrl = useCallback((value: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (value) {
+      params.set('q', value)
+    } else {
+      params.delete('q')
+    }
+    const qs = params.toString()
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+  }, [searchParams, router, pathname])
+
+  useEffect(() => {
+    const timeout = setTimeout(() => syncSearchToUrl(search), 300)
+    return () => clearTimeout(timeout)
+  }, [search, syncSearchToUrl])
   const [open, setOpen] = useState(false)
   const [noteText, setNoteText] = useState('')
   const [noteBookId, setNoteBookId] = useState('')
   const [pageRef, setPageRef] = useState('')
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     const supabase = createClient()
     const { data: { session } } = await supabase.auth.getSession()
     if (!session?.user) { setLoading(false); return }
@@ -48,7 +64,11 @@ export default function NotesPage() {
     setNotes(notesData || [])
     setBooks(booksData || [])
     setLoading(false)
-  }
+  }, [])
+
+  // Data fetching on mount — async setState is intentional
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchData() }, [fetchData])
 
   const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,9 +88,11 @@ export default function NotesPage() {
     }).select('id').single()
 
     if (!error) {
-      // XP & streak
-      await updateStreak(supabase, session.user.id)
-      const result = await addXp(supabase, session.user.id, XP_REWARDS.NOTE_MANUAL)
+      // XP & streak (parallel)
+      await Promise.all([
+        updateStreak(supabase, session.user.id),
+        addXp(supabase, session.user.id, XP_REWARDS.NOTE_MANUAL),
+      ])
       toast.success(`Заметка сохранена! +${XP_REWARDS.NOTE_MANUAL} XP`)
 
       // Generate review cards
@@ -130,9 +152,9 @@ export default function NotesPage() {
             </DialogHeader>
             <form onSubmit={handleAddNote} className="space-y-4">
               <div className="space-y-2">
-                <Label>Книга (необязательно)</Label>
+                <Label htmlFor="note-book">Книга (необязательно)</Label>
                 <Select value={noteBookId} onValueChange={setNoteBookId}>
-                  <SelectTrigger>
+                  <SelectTrigger id="note-book">
                     <SelectValue placeholder="Выберите книгу" />
                   </SelectTrigger>
                   <SelectContent>
@@ -143,12 +165,12 @@ export default function NotesPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Страница</Label>
-                <Input type="number" value={pageRef} onChange={(e) => setPageRef(e.target.value)} placeholder="Номер страницы" />
+                <Label htmlFor="note-page">Страница</Label>
+                <Input id="note-page" type="number" value={pageRef} onChange={(e) => setPageRef(e.target.value)} placeholder="Номер страницы" />
               </div>
               <div className="space-y-2">
-                <Label>Текст заметки *</Label>
-                <Textarea value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="Ваша заметка..." rows={6} required />
+                <Label htmlFor="note-text">Текст заметки *</Label>
+                <Textarea id="note-text" value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="Ваша заметка..." rows={6} required />
               </div>
               <Button type="submit" className="w-full" disabled={saving || !noteText.trim()}>
                 {saving ? 'Сохранение...' : 'Сохранить'}
@@ -170,9 +192,14 @@ export default function NotesPage() {
 
       {filtered.length === 0 ? (
         <Card>
-          <CardContent className="p-12 text-center text-muted-foreground">
-            <p className="text-4xl mb-2">📝</p>
-            <p>{search ? 'Ничего не найдено' : 'Пока нет заметок. Создайте первую!'}</p>
+          <CardContent className="p-16 text-center">
+            <div className="text-5xl mb-4 opacity-40">{search ? '🔍' : '📝'}</div>
+            <p className="text-muted-foreground font-medium">
+              {search ? 'Ничего не найдено' : 'Пока нет заметок'}
+            </p>
+            {!search && (
+              <p className="text-sm text-muted-foreground/60 mt-1">Создайте первую заметку, чтобы начать</p>
+            )}
           </CardContent>
         </Card>
       ) : (

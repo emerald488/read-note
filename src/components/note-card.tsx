@@ -21,7 +21,7 @@ interface NoteCardProps {
 
 export const NoteCard = memo(function NoteCard({ note, index = 0 }: NoteCardProps) {
   const text = note.formatted_text || note.manual_text || ''
-  const preview = text.length > 200 ? text.substring(0, 200) + '...' : text
+  const preview = text.length > 200 ? text.substring(0, 200) + '\u2026' : text
 
   return (
     <motion.div
@@ -34,16 +34,16 @@ export const NoteCard = memo(function NoteCard({ note, index = 0 }: NoteCardProp
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
               {note.source === 'voice' ? (
-                <Badge variant="outline" className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+                <Badge variant="outline" className="bg-primary/10 text-primary/80 border-primary/20">
                   <Mic className="h-3 w-3 mr-1" /> Голос
                 </Badge>
               ) : (
-                <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
                   <PenLine className="h-3 w-3 mr-1" /> Текст
                 </Badge>
               )}
               {note.book && (
-                <Badge variant="outline" className="bg-green-500/20 text-green-400 border-green-500/30">
+                <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
                   <BookOpen className="h-3 w-3 mr-1" /> {note.book.title}
                 </Badge>
               )}

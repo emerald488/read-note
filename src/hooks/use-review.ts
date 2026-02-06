@@ -42,9 +42,9 @@ export function useReview() {
     setLoading(false)
   }, [])
 
-  useEffect(() => {
-    fetchDueCards()
-  }, [fetchDueCards])
+  // Data fetching on mount — async setState is intentional
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchDueCards() }, [fetchDueCards])
 
   const answerCard = async (cardId: string, button: 'forgot' | 'hard' | 'normal' | 'easy') => {
     const card = cards.find((c) => c.id === cardId)

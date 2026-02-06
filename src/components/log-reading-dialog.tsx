@@ -39,20 +39,20 @@ export function LogReadingDialog({ books, onComplete, children }: LogReadingDial
     const pages = parseInt(pagesRead)
     const book = books.find((b) => b.id === bookId)
 
-    // Calculate XP
-    const streakResult = await updateStreak(supabase, session.user.id)
+    // Streak + session creation in parallel
+    const [streakResult] = await Promise.all([
+      updateStreak(supabase, session.user.id),
+      supabase.from('reading_sessions').insert({
+        user_id: session.user.id,
+        book_id: bookId,
+        pages_read: pages,
+        duration_minutes: duration ? parseInt(duration) : null,
+        xp_earned: 0,
+      }),
+    ])
     const streakBonus = (streakResult?.streak || 0) * XP_REWARDS.STREAK_BONUS_PER_DAY
     const baseXp = pages * XP_REWARDS.PAGES_READ
     const totalXp = baseXp + (streakResult?.isNew ? streakBonus : 0)
-
-    // Create reading session
-    await supabase.from('reading_sessions').insert({
-      user_id: session.user.id,
-      book_id: bookId,
-      pages_read: pages,
-      duration_minutes: duration ? parseInt(duration) : null,
-      xp_earned: totalXp,
-    })
 
     // Update book progress
     if (book) {
@@ -106,9 +106,9 @@ export function LogReadingDialog({ books, onComplete, children }: LogReadingDial
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label>Книга *</Label>
+            <Label htmlFor="log-book">Книга *</Label>
             <Select value={bookId} onValueChange={setBookId}>
-              <SelectTrigger>
+              <SelectTrigger id="log-book">
                 <SelectValue placeholder="Выберите книгу" />
               </SelectTrigger>
               <SelectContent>

@@ -30,10 +30,17 @@ export async function POST(request: NextRequest) {
     if (text.startsWith('/start')) {
       const code = text.split(' ')[1]
       if (code) {
+        // Validate link code format (8 hex chars)
+        const sanitizedCode = code.toUpperCase().replace(/[^A-F0-9]/g, '').substring(0, 8)
+        if (sanitizedCode.length !== 8) {
+          await sendTelegramMessage(chatId, '❌ Неверный формат кода привязки.')
+          return NextResponse.json({ ok: true })
+        }
+
         const { data: profile } = await supabase
           .from('profiles')
           .select('id')
-          .eq('telegram_link_code', code.toUpperCase())
+          .eq('telegram_link_code', sanitizedCode)
           .single()
 
         if (profile) {
@@ -163,9 +170,11 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // XP & streak
-        const streakResult = await updateStreak(supabase, profile.id)
-        await addXp(supabase, profile.id, XP_REWARDS.NOTE_VOICE)
+        // XP & streak (parallel)
+        const [streakResult] = await Promise.all([
+          updateStreak(supabase, profile.id),
+          addXp(supabase, profile.id, XP_REWARDS.NOTE_VOICE),
+        ])
 
         // Check achievements
         const newAchievements = await checkAchievements(supabase, profile.id)
@@ -216,8 +225,10 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const streakResult = await updateStreak(supabase, profile.id)
-      await addXp(supabase, profile.id, XP_REWARDS.NOTE_MANUAL)
+      const [streakResult] = await Promise.all([
+        updateStreak(supabase, profile.id),
+        addXp(supabase, profile.id, XP_REWARDS.NOTE_MANUAL),
+      ])
 
       const newAchievements = await checkAchievements(supabase, profile.id)
       const achievementText = newAchievements.length > 0

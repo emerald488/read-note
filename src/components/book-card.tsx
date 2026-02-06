@@ -9,16 +9,26 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 
 const statusConfig = {
-  reading: { label: 'Читаю', color: 'bg-green-500/20 text-green-400 border-green-500/30', icon: BookOpen },
-  finished: { label: 'Прочитано', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30', icon: CheckCircle2 },
-  paused: { label: 'Пауза', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30', icon: Pause },
-  want: { label: 'Хочу прочитать', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30', icon: BookMarked },
+  reading: { label: 'Читаю', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25', icon: BookOpen },
+  finished: { label: 'Прочитано', color: 'bg-primary/15 text-primary border-primary/25', icon: CheckCircle2 },
+  paused: { label: 'Пауза', color: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/25', icon: Pause },
+  want: { label: 'Хочу прочитать', color: 'bg-muted-foreground/15 text-muted-foreground border-muted-foreground/25', icon: BookMarked },
+}
+
+// Generate a warm color from book title for the placeholder cover
+function titleToHue(title: string): number {
+  let hash = 0
+  for (let i = 0; i < title.length; i++) {
+    hash = title.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return ((hash % 60) + 20 + 360) % 360 // warm range: 20-80 hue
 }
 
 export const BookCard = memo(function BookCard({ book, index = 0 }: { book: Book; index?: number }) {
   const status = statusConfig[book.status]
   const StatusIcon = status.icon
   const progress = book.total_pages ? Math.round((book.current_page / book.total_pages) * 100) : 0
+  const hue = titleToHue(book.title)
 
   return (
     <motion.div
@@ -30,8 +40,15 @@ export const BookCard = memo(function BookCard({ book, index = 0 }: { book: Book
         <Card className="group hover:border-primary/30 transition-all duration-300 cursor-pointer overflow-hidden">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
-              <div className="w-12 h-16 rounded bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
-                <BookOpen className="h-6 w-6 text-primary/60" />
+              <div
+                className="w-12 h-16 rounded-sm flex items-center justify-center shrink-0 shadow-sm"
+                style={{
+                  background: `linear-gradient(135deg, oklch(0.35 0.08 ${hue}), oklch(0.25 0.06 ${hue + 20}))`,
+                }}
+              >
+                <span className="text-white/40 text-[10px] font-display font-bold leading-tight text-center px-1 select-none">
+                  {book.title.slice(0, 2).toUpperCase()}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold truncate group-hover:text-primary transition-colors">
@@ -46,7 +63,7 @@ export const BookCard = memo(function BookCard({ book, index = 0 }: { book: Book
                     {status.label}
                   </Badge>
                   {book.total_pages && book.status === 'reading' && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground tabular-nums">
                       {book.current_page}/{book.total_pages} стр. ({progress}%)
                     </span>
                   )}
@@ -54,7 +71,7 @@ export const BookCard = memo(function BookCard({ book, index = 0 }: { book: Book
                 {book.status === 'reading' && book.total_pages && (
                   <div className="mt-2 h-1.5 rounded-full bg-secondary overflow-hidden">
                     <motion.div
-                      className="h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-400"
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400"
                       initial={{ width: 0 }}
                       animate={{ width: `${progress}%` }}
                       transition={{ duration: 0.8 }}

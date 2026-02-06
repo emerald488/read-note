@@ -78,9 +78,12 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold truncate">
-          Привет, {profile?.username || 'Читатель'}! 👋
-        </h1>
+        <div>
+          <p className="text-xs text-muted-foreground tracking-wider uppercase mb-1">Добро пожаловать</p>
+          <h1 className="text-2xl font-bold truncate">
+            {profile?.username || 'Читатель'}
+          </h1>
+        </div>
         <div className="flex gap-2 shrink-0">
           <LogReadingDialog books={books} onComplete={handleComplete} />
           <AddBookDialog onAdd={addBook} />
@@ -89,7 +92,7 @@ export default function DashboardPage() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border-orange-500/20">
+        <Card className="bg-gradient-to-br from-primary/[0.08] to-primary/[0.02] border-primary/10">
           <CardContent className="p-6 flex flex-col items-center justify-center">
             <StreakFlame streak={profile?.current_streak || 0} />
           </CardContent>
@@ -115,7 +118,7 @@ export default function DashboardPage() {
                 <Brain className="h-4 w-4" />
                 На повторение
               </div>
-              <Link href="/review" className="font-bold text-orange-400 hover:underline">
+              <Link href="/review" className="font-bold text-primary hover:underline">
                 {reviewCount}
               </Link>
             </div>

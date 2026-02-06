@@ -40,7 +40,8 @@ export async function POST(request: NextRequest) {
       const randomNote = notes[Math.floor(Math.random() * notes.length)]
       const text = randomNote.formatted_text || randomNote.manual_text || ''
       const preview = text.length > 400 ? text.substring(0, 400) + '...' : text
-      const bookInfo = randomNote.book ? `\n📚 ${(randomNote.book as any).title}` : ''
+      const book = randomNote.book as unknown as { title: string } | null
+      const bookInfo = book ? `\n📚 ${book.title}` : ''
 
       return sendTelegramMessage(
         profile.telegram_chat_id!,

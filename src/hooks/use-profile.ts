@@ -36,9 +36,9 @@ export function useProfile() {
     setLoading(false)
   }, [])
 
-  useEffect(() => {
-    fetchProfile()
-  }, [fetchProfile])
+  // Data fetching on mount — async setState is intentional
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchProfile() }, [fetchProfile])
 
   return { profile, loading, refetch: fetchProfile }
 }

@@ -23,14 +23,14 @@ export const AchievementBadge = memo(function AchievementBadge({ achievement, ea
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: index * 0.05 }}
     >
-      <Card className={`${earned ? 'border-amber-500/30 bg-amber-500/5' : 'opacity-40 grayscale'} transition-all`}>
-        <CardContent className="p-4 flex items-center gap-3">
-          <span className="text-3xl">{achievement.icon}</span>
-          <div>
+      <Card className={`${earned ? 'border-primary/20 bg-primary/[0.04]' : 'opacity-30 grayscale'} transition-all`}>
+        <CardContent className="p-4 flex items-center gap-4">
+          <span className={`text-3xl ${!earned && 'opacity-50'}`}>{achievement.icon}</span>
+          <div className="min-w-0">
             <h3 className="font-semibold text-sm">{achievement.name}</h3>
             <p className="text-xs text-muted-foreground">{achievement.description}</p>
             {earned && achievement.earned_at && (
-              <p className="text-xs text-amber-400 mt-1">
+              <p className="text-[11px] text-primary/70 mt-1">
                 {new Date(achievement.earned_at).toLocaleDateString('ru-RU')}
               </p>
             )}

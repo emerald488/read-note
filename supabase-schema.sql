@@ -71,7 +71,8 @@ create table achievements (
   name text not null,
   description text,
   icon text,
-  earned_at timestamptz default now()
+  earned_at timestamptz default now(),
+  unique(user_id, type)
 );
 
 -- Review cards (spaced repetition)
@@ -99,6 +100,8 @@ create index idx_notes_book_id on notes(book_id);
 create index idx_review_cards_next_review on review_cards(user_id, next_review);
 create index idx_achievements_user_id on achievements(user_id);
 create index idx_profiles_telegram on profiles(telegram_chat_id);
+create index idx_notes_user_created on notes(user_id, created_at desc);
+create index idx_reading_sessions_user_date on reading_sessions(user_id, date desc);
 
 -- RLS Policies
 alter table profiles enable row level security;
@@ -146,7 +149,7 @@ begin
   values (new.id, coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)));
   return new;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = '';
 
 -- Trigger for new user
 create trigger on_auth_user_created

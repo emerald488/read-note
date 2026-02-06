@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Trophy } from 'lucide-react'
 
 export default function AchievementsPage() {
-  const [earned, setEarned] = useState<any[]>([])
+  const [earned, setEarned] = useState<{ type: string; name: string; description: string; icon: string; earned_at: string }[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -44,10 +44,12 @@ export default function AchievementsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Trophy className="h-6 w-6 text-amber-400" />
-        <h1 className="text-2xl font-bold">Достижения</h1>
-        <span className="text-sm text-muted-foreground">({earned.length}/{ACHIEVEMENTS.length})</span>
+      <div className="flex items-center gap-3">
+        <Trophy className="h-6 w-6 text-primary" />
+        <div>
+          <h1 className="text-2xl font-bold">Достижения</h1>
+          <p className="text-xs text-muted-foreground tracking-wider">{earned.length} из {ACHIEVEMENTS.length} получено</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -27,13 +27,14 @@ export function NavSidebar() {
   }
 
   return (
-    <aside className="hidden md:flex w-64 border-r border-border bg-card flex-col h-screen sticky top-0">
-      <div className="p-6">
-        <h1 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
-          📖 Читательский Дневник
+    <aside className="hidden md:flex w-64 border-r border-border bg-sidebar flex-col h-screen sticky top-0">
+      <div className="p-6 pb-4">
+        <h1 className="font-display text-xl font-bold tracking-tight text-foreground">
+          <span className="text-primary">Читательский</span> Дневник
         </h1>
+        <p className="text-[11px] text-muted-foreground mt-0.5 tracking-widest uppercase">Читай каждый день</p>
       </div>
-      <nav className="flex-1 px-3 space-y-1">
+      <nav className="flex-1 px-3 space-y-0.5">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href)
           return (
@@ -41,13 +42,13 @@ export function NavSidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                'relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                 isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  ? 'nav-active bg-primary/10 text-primary shadow-sm shadow-primary/5'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               )}
             >
-              <item.icon className="h-5 w-5" />
+              <item.icon className={cn('h-5 w-5 transition-colors', isActive && 'text-primary')} />
               {item.label}
             </Link>
           )
@@ -56,7 +57,8 @@ export function NavSidebar() {
       <div className="p-3 border-t border-border">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-colors"
+          aria-label="Выйти из аккаунта"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 w-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           <LogOut className="h-5 w-5" />
           Выйти

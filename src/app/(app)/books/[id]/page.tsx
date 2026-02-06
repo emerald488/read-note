@@ -3,9 +3,8 @@
 import { useEffect, useState, use } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Book } from '@/hooks/use-books'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { NoteCard } from '@/components/note-card'
 import { LogReadingDialog } from '@/components/log-reading-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -19,7 +18,7 @@ import { toast } from 'sonner'
 export default function BookDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [book, setBook] = useState<Book | null>(null)
-  const [notes, setNotes] = useState<any[]>([])
+  const [notes, setNotes] = useState<{ id: string; formatted_text: string | null; manual_text: string | null; source: 'voice' | 'manual'; page_reference: number | null; created_at: string; book?: { title: string } | null }[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -63,6 +62,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
 
   const deleteBook = async () => {
     if (!book) return
+    if (!window.confirm('Вы уверены, что хотите удалить эту книгу? Это действие нельзя отменить.')) return
     const supabase = createClient()
     await supabase.from('books').delete().eq('id', book.id)
     toast.success('Книга удалена')
@@ -146,13 +146,13 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex items-center justify-between">
             <LogReadingDialog books={[book]} onComplete={() => router.refresh()}>
               <Button className="gap-2">
                 <BookOpen className="h-4 w-4" /> Записать чтение
               </Button>
             </LogReadingDialog>
-            <Button variant="destructive" size="sm" onClick={deleteBook}>
+            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={deleteBook}>
               Удалить
             </Button>
           </div>

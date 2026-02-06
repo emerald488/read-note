@@ -30,8 +30,12 @@ export function ReviewCardFlip({ card, onAnswer }: ReviewCardProps) {
           transition={{ duration: 0.3 }}
         >
           <Card
-            className="min-h-[300px] cursor-pointer hover:border-primary/30 transition-colors"
+            className="min-h-[300px] sm:min-h-[300px] min-h-[250px] cursor-pointer hover:border-primary/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             onClick={() => !isFlipped && setIsFlipped(true)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!isFlipped) setIsFlipped(true) } }}
+            tabIndex={0}
+            role="button"
+            aria-label={isFlipped ? 'Ответ на карточку' : 'Нажмите чтобы увидеть ответ'}
           >
             <CardContent className="p-6 flex flex-col items-center justify-center min-h-[300px]">
               {!isFlipped ? (

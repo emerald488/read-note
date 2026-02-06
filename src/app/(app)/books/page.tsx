@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useBooks } from '@/hooks/use-books'
 import { BookCard } from '@/components/book-card'
 import { AddBookDialog } from '@/components/add-book-dialog'
@@ -9,7 +10,21 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export default function BooksPage() {
   const { books, loading, addBook } = useBooks()
-  const [tab, setTab] = useState('all')
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const tab = searchParams.get('status') || 'all'
+
+  const setTab = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (value === 'all') {
+      params.delete('status')
+    } else {
+      params.set('status', value)
+    }
+    const qs = params.toString()
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+  }
 
   const counts = useMemo(() => ({
     all: books.length,
@@ -50,9 +65,10 @@ export default function BooksPage() {
         </TabsList>
         <TabsContent value={tab} className="mt-4">
           {filtered.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <p className="text-4xl mb-2">📚</p>
-              <p>Пока нет книг в этой категории</p>
+            <div className="text-center py-16">
+              <div className="text-5xl mb-4 opacity-40">📚</div>
+              <p className="text-muted-foreground font-medium">Пока нет книг в этой категории</p>
+              <p className="text-sm text-muted-foreground/60 mt-1">Добавьте книгу, чтобы начать</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
