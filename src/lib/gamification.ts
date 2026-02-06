@@ -31,59 +31,75 @@ export function xpProgress(xp: number): { current: number; needed: number; perce
 }
 
 export async function addXp(supabase: SupabaseClient, userId: string, amount: number) {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('xp, level')
-    .eq('id', userId)
-    .single()
+  // Atomic increment via RPC to prevent race conditions
+  const { data, error } = await supabase.rpc('add_xp', { p_user_id: userId, p_amount: amount })
 
-  if (!profile) return
+  if (error) {
+    // Fallback to non-atomic if RPC not yet deployed
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('xp, level')
+      .eq('id', userId)
+      .single()
 
-  const newXp = profile.xp + amount
-  const newLevel = calculateLevel(newXp)
+    if (!profile) return
 
-  await supabase
-    .from('profiles')
-    .update({ xp: newXp, level: newLevel })
-    .eq('id', userId)
+    const newXp = profile.xp + amount
+    const newLevel = calculateLevel(newXp)
 
-  return { xp: newXp, level: newLevel, levelUp: newLevel > profile.level }
+    await supabase
+      .from('profiles')
+      .update({ xp: newXp, level: newLevel })
+      .eq('id', userId)
+
+    return { xp: newXp, level: newLevel, levelUp: newLevel > profile.level }
+  }
+
+  return data ? { xp: data.new_xp, level: data.new_level, levelUp: data.level_up } : undefined
 }
 
 export async function updateStreak(supabase: SupabaseClient, userId: string) {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('current_streak, longest_streak, last_read_date')
-    .eq('id', userId)
-    .single()
+  // Atomic streak update via RPC to prevent race conditions
+  const { data, error } = await supabase.rpc('update_streak', { p_user_id: userId })
 
-  if (!profile) return
+  if (error) {
+    // Fallback to non-atomic if RPC not yet deployed
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('current_streak, longest_streak, last_read_date')
+      .eq('id', userId)
+      .single()
 
-  const today = new Date().toISOString().split('T')[0]
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+    if (!profile) return
 
-  let newStreak = profile.current_streak
+    const today = new Date().toISOString().split('T')[0]
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
 
-  if (profile.last_read_date === today) {
-    return { streak: newStreak, isNew: false }
-  } else if (profile.last_read_date === yesterday) {
-    newStreak += 1
-  } else {
-    newStreak = 1
+    let newStreak = profile.current_streak
+
+    if (profile.last_read_date === today) {
+      return { streak: newStreak, isNew: false }
+    } else if (profile.last_read_date === yesterday) {
+      newStreak += 1
+    } else {
+      newStreak = 1
+    }
+
+    const longestStreak = Math.max(newStreak, profile.longest_streak)
+
+    await supabase
+      .from('profiles')
+      .update({
+        current_streak: newStreak,
+        longest_streak: longestStreak,
+        last_read_date: today,
+      })
+      .eq('id', userId)
+
+    return { streak: newStreak, isNew: true }
   }
 
-  const longestStreak = Math.max(newStreak, profile.longest_streak)
-
-  await supabase
-    .from('profiles')
-    .update({
-      current_streak: newStreak,
-      longest_streak: longestStreak,
-      last_read_date: today,
-    })
-    .eq('id', userId)
-
-  return { streak: newStreak, isNew: true }
+  return data ? { streak: data.new_streak, isNew: data.is_new } : undefined
 }
 
 export interface AchievementDef {

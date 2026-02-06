@@ -59,13 +59,13 @@ export default function NotesPage() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session?.user) { setSaving(false); return }
 
-    const { error } = await supabase.from('notes').insert({
+    const { data: note, error } = await supabase.from('notes').insert({
       user_id: session.user.id,
       book_id: noteBookId || null,
       manual_text: noteText.trim(),
       source: 'manual',
       page_reference: pageRef ? parseInt(pageRef) : null,
-    })
+    }).select('id').single()
 
     if (!error) {
       // XP & streak
@@ -81,7 +81,7 @@ export default function NotesPage() {
           body: JSON.stringify({
             noteText: noteText.trim(),
             bookId: noteBookId || null,
-            userId: session.user.id,
+            noteId: note?.id || null,
           }),
         })
       } catch {}

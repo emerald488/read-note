@@ -4,12 +4,16 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { noteText, bookId, userId } = await request.json()
-    if (!noteText || !userId) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = await createClient()
+    const { noteText, bookId, noteId } = await request.json()
+    if (!noteText) {
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+    }
 
     // Get book title if bookId provided
     let bookTitle: string | undefined
@@ -25,19 +29,10 @@ export async function POST(request: NextRequest) {
     const cards = await generateReviewCards(noteText, bookTitle)
 
     if (cards.length > 0) {
-      // Find the note
-      const { data: note } = await supabase
-        .from('notes')
-        .select('id')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
-
       await supabase.from('review_cards').insert(
         cards.map((c) => ({
-          user_id: userId,
-          note_id: note?.id || null,
+          user_id: user.id,
+          note_id: noteId || null,
           book_id: bookId || null,
           question: c.question,
           answer: c.answer,

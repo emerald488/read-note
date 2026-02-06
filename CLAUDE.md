@@ -26,6 +26,7 @@ Required in `.env.local`:
 - `OPENAI_API_KEY` — Whisper transcription + GPT-4o-mini formatting
 - `NEXT_PUBLIC_APP_URL` — app URL (e.g. `http://localhost:3000`)
 - `CRON_SECRET` — protects cron API endpoints
+- `TELEGRAM_WEBHOOK_SECRET` — verifies Telegram webhook requests (set via `setWebhook` API `secret_token` param)
 
 ## Architecture
 
@@ -56,7 +57,7 @@ Custom React hooks in `src/hooks/` manage client-side data fetching and mutation
 - `use-review.ts` — review card fetching, SM-2 grade submission
 
 ### Database (Supabase PostgreSQL)
-Tables: `profiles`, `books` (status enum: reading|finished|paused|want), `reading_sessions`, `notes` (source: voice|manual), `review_cards` (SM-2 fields), `achievements`. Schema SQL is in `supabase/schema.sql`.
+Tables: `profiles`, `books` (status enum: reading|finished|paused|want), `reading_sessions`, `notes` (source: voice|manual), `review_cards` (SM-2 fields), `achievements`. Migrations in `supabase/migrations/`. Atomic RPC functions `add_xp` and `update_streak` prevent race conditions on concurrent XP/streak updates.
 
 ### Cron Endpoints
 `/api/cron/note-digest`, `/api/cron/reading-reminder`, `/api/cron/review-reminder` — all validate `CRON_SECRET` header, use service role, send Telegram messages in parallel batches.

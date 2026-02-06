@@ -1,4 +1,5 @@
-import { Bot, Context } from 'grammy'
+import { Bot } from 'grammy'
+import { randomBytes } from 'crypto'
 
 let bot: Bot | null = null
 
@@ -15,5 +16,5 @@ export async function sendTelegramMessage(chatId: number | string, text: string)
 }
 
 export function generateLinkCode(): string {
-  return Math.random().toString(36).substring(2, 8).toUpperCase()
+  return randomBytes(4).toString('hex').toUpperCase().substring(0, 8)
 }
