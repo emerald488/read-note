@@ -1,10 +1,12 @@
 import OpenAI from 'openai'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+function getOpenAI() {
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+}
 
 export async function transcribeAudio(audioBuffer: Buffer, filename: string): Promise<string> {
   const file = new File([new Uint8Array(audioBuffer)], filename, { type: 'audio/ogg' })
-  const transcription = await openai.audio.transcriptions.create({
+  const transcription = await getOpenAI().audio.transcriptions.create({
     model: 'whisper-1',
     file,
     language: 'ru',
@@ -14,7 +16,7 @@ export async function transcribeAudio(audioBuffer: Buffer, filename: string): Pr
 
 export async function formatNote(rawText: string, bookTitle?: string): Promise<string> {
   const context = bookTitle ? ` о книге "${bookTitle}"` : ''
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
       {
@@ -33,7 +35,7 @@ export async function generateReviewCards(
   bookTitle?: string
 ): Promise<{ question: string; answer: string }[]> {
   const context = bookTitle ? ` из книги "${bookTitle}"` : ''
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
       {
