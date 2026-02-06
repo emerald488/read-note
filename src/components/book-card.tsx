@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { Book } from '@/hooks/use-books'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +15,7 @@ const statusConfig = {
   want: { label: 'Хочу прочитать', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30', icon: BookMarked },
 }
 
-export function BookCard({ book, index = 0 }: { book: Book; index?: number }) {
+export const BookCard = memo(function BookCard({ book, index = 0 }: { book: Book; index?: number }) {
   const status = statusConfig[book.status]
   const StatusIcon = status.icon
   const progress = book.total_pages ? Math.round((book.current_page / book.total_pages) * 100) : 0
@@ -67,4 +68,4 @@ export function BookCard({ book, index = 0 }: { book: Book; index?: number }) {
       </Link>
     </motion.div>
   )
-}
+})

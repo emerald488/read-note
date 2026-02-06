@@ -122,26 +122,17 @@ export async function checkAchievements(supabase: SupabaseClient, userId: string
     { count: totalNotes },
     { count: voiceNotes },
     { data: existingAchievements },
+    { count: totalReviews },
+    { data: dailyPages },
   ] = await Promise.all([
     supabase.from('books').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'finished'),
     supabase.from('profiles').select('current_streak').eq('id', userId).single(),
     supabase.from('notes').select('*', { count: 'exact', head: true }).eq('user_id', userId),
     supabase.from('notes').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('source', 'voice'),
     supabase.from('achievements').select('type').eq('user_id', userId),
+    supabase.from('review_cards').select('*', { count: 'exact', head: true }).eq('user_id', userId).gt('repetitions', 0),
+    supabase.from('reading_sessions').select('date, pages_read').eq('user_id', userId),
   ])
-
-  // Get total reviews count
-  const { count: totalReviews } = await supabase
-    .from('review_cards')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .gt('repetitions', 0)
-
-  // Get max pages in a single day (sum pages_read grouped by date, take max)
-  const { data: dailyPages } = await supabase
-    .from('reading_sessions')
-    .select('date, pages_read')
-    .eq('user_id', userId)
 
   let maxPagesInDay = 0
   if (dailyPages) {
@@ -167,14 +158,19 @@ export async function checkAchievements(supabase: SupabaseClient, userId: string
   for (const achievement of ACHIEVEMENTS) {
     if (!earnedTypes.has(achievement.type) && achievement.check(stats)) {
       newAchievements.push(achievement)
-      await supabase.from('achievements').insert({
-        user_id: userId,
-        type: achievement.type,
-        name: achievement.name,
-        description: achievement.description,
-        icon: achievement.icon,
-      })
     }
+  }
+
+  if (newAchievements.length > 0) {
+    await supabase.from('achievements').insert(
+      newAchievements.map(a => ({
+        user_id: userId,
+        type: a.type,
+        name: a.name,
+        description: a.description,
+        icon: a.icon,
+      }))
+    )
   }
 
   return newAchievements

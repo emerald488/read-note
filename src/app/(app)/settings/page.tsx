@@ -19,7 +19,6 @@ export default function SettingsPage() {
   const [username, setUsername] = useState('')
   const [saving, setSaving] = useState(false)
   const [copied, setCopied] = useState(false)
-  const supabase = createClient()
 
   useEffect(() => {
     if (profile) {
@@ -30,6 +29,7 @@ export default function SettingsPage() {
   const handleSave = async () => {
     if (!profile) return
     setSaving(true)
+    const supabase = createClient()
     await supabase
       .from('profiles')
       .update({ username: username.trim() })
@@ -41,6 +41,7 @@ export default function SettingsPage() {
 
   const handleGenerateCode = async () => {
     if (!profile) return
+    const supabase = createClient()
     const code = generateLinkCode()
     await supabase
       .from('profiles')

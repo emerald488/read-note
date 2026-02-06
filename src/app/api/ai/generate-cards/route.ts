@@ -9,10 +9,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     }
 
+    const supabase = await createClient()
+
     // Get book title if bookId provided
     let bookTitle: string | undefined
     if (bookId) {
-      const supabase = await createClient()
       const { data: book } = await supabase
         .from('books')
         .select('title')
@@ -24,8 +25,6 @@ export async function POST(request: NextRequest) {
     const cards = await generateReviewCards(noteText, bookTitle)
 
     if (cards.length > 0) {
-      const supabase = await createClient()
-
       // Find the note
       const { data: note } = await supabase
         .from('notes')

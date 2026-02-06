@@ -23,24 +23,24 @@ export function useReview() {
   const [cards, setCards] = useState<ReviewCard[]>([])
   const [loading, setLoading] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const supabase = createClient()
 
   const fetchDueCards = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setLoading(false); return }
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) { setLoading(false); return }
 
     const today = new Date().toISOString().split('T')[0]
     const { data } = await supabase
       .from('review_cards')
       .select('*, book:books(title)')
-      .eq('user_id', user.id)
+      .eq('user_id', session.user.id)
       .lte('next_review', today)
       .order('next_review', { ascending: true })
 
     setCards(data || [])
     setCurrentIndex(0)
     setLoading(false)
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     fetchDueCards()
@@ -53,6 +53,7 @@ export function useReview() {
     const quality = qualityFromButton(button)
     const result = sm2(quality, card.ease_factor, card.interval_days, card.repetitions)
 
+    const supabase = createClient()
     await supabase
       .from('review_cards')
       .update({

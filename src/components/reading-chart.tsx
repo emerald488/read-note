@@ -11,36 +11,43 @@ interface DayData {
 
 export function ReadingChart() {
   const [data, setData] = useState<DayData[]>([])
-  const supabase = createClient()
 
   useEffect(() => {
     async function fetchData() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) return
 
-      const days: DayData[] = []
       const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
+      const fromDate = sevenDaysAgo.toISOString().split('T')[0]
+
+      const { data: sessions } = await supabase
+        .from('reading_sessions')
+        .select('date, pages_read')
+        .eq('user_id', session.user.id)
+        .gte('date', fromDate)
+
+      const byDate: Record<string, number> = {}
+      for (const s of sessions || []) {
+        byDate[s.date] = (byDate[s.date] || 0) + s.pages_read
+      }
+
+      const days: DayData[] = []
       for (let i = 6; i >= 0; i--) {
         const date = new Date()
         date.setDate(date.getDate() - i)
         const dateStr = date.toISOString().split('T')[0]
         const dayIndex = (date.getDay() + 6) % 7
-
-        const { data: sessions } = await supabase
-          .from('reading_sessions')
-          .select('pages_read')
-          .eq('user_id', user.id)
-          .eq('date', dateStr)
-
-        const totalPages = sessions?.reduce((sum, s) => sum + s.pages_read, 0) || 0
-        days.push({ day: dayNames[dayIndex], pages: totalPages })
+        days.push({ day: dayNames[dayIndex], pages: byDate[dateStr] || 0 })
       }
 
       setData(days)
     }
     fetchData()
-  }, [supabase])
+  }, [])
 
   return (
     <div className="h-[200px] w-full">

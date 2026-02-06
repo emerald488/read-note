@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Mic, PenLine, BookOpen } from 'lucide-react'
@@ -18,7 +19,7 @@ interface NoteCardProps {
   index?: number
 }
 
-export function NoteCard({ note, index = 0 }: NoteCardProps) {
+export const NoteCard = memo(function NoteCard({ note, index = 0 }: NoteCardProps) {
   const text = note.formatted_text || note.manual_text || ''
   const preview = text.length > 200 ? text.substring(0, 200) + '...' : text
 
@@ -63,4 +64,4 @@ export function NoteCard({ note, index = 0 }: NoteCardProps) {
       </Card>
     </motion.div>
   )
-}
+})

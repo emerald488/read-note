@@ -21,34 +21,26 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   const [book, setBook] = useState<Book | null>(null)
   const [notes, setNotes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
   const router = useRouter()
 
   useEffect(() => {
     async function fetchData() {
-      const { data: bookData } = await supabase
-        .from('books')
-        .select('*')
-        .eq('id', id)
-        .single()
+      const supabase = createClient()
+      const [{ data: bookData }, { data: notesData }] = await Promise.all([
+        supabase.from('books').select('*').eq('id', id).single(),
+        supabase.from('notes').select('*').eq('book_id', id).order('created_at', { ascending: false }),
+      ])
 
-      if (bookData) {
-        setBook(bookData)
-        const { data: notesData } = await supabase
-          .from('notes')
-          .select('*')
-          .eq('book_id', id)
-          .order('created_at', { ascending: false })
-
-        setNotes(notesData || [])
-      }
+      setBook(bookData)
+      setNotes(notesData || [])
       setLoading(false)
     }
     fetchData()
-  }, [id, supabase])
+  }, [id])
 
   const updateStatus = async (status: string) => {
     if (!book) return
+    const supabase = createClient()
     const updates: Record<string, unknown> = { status }
     if (status === 'reading' && !book.started_at) {
       updates.started_at = new Date().toISOString().split('T')[0]
@@ -71,6 +63,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
 
   const deleteBook = async () => {
     if (!book) return
+    const supabase = createClient()
     await supabase.from('books').delete().eq('id', book.id)
     toast.success('Книга удалена')
     router.push('/books')

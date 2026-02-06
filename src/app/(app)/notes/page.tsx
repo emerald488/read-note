@@ -26,23 +26,23 @@ export default function NotesPage() {
   const [noteBookId, setNoteBookId] = useState('')
   const [pageRef, setPageRef] = useState('')
   const [saving, setSaving] = useState(false)
-  const supabase = createClient()
 
   useEffect(() => {
     fetchData()
   }, [])
 
   async function fetchData() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setLoading(false); return }
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) { setLoading(false); return }
 
     const [{ data: notesData }, { data: booksData }] = await Promise.all([
       supabase
         .from('notes')
         .select('*, book:books(title)')
-        .eq('user_id', user.id)
+        .eq('user_id', session.user.id)
         .order('created_at', { ascending: false }),
-      supabase.from('books').select('*').eq('user_id', user.id).order('title'),
+      supabase.from('books').select('*').eq('user_id', session.user.id).order('title'),
     ])
 
     setNotes(notesData || [])
@@ -55,11 +55,12 @@ export default function NotesPage() {
     if (!noteText.trim()) return
     setSaving(true)
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setSaving(false); return }
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) { setSaving(false); return }
 
     const { error } = await supabase.from('notes').insert({
-      user_id: user.id,
+      user_id: session.user.id,
       book_id: noteBookId || null,
       manual_text: noteText.trim(),
       source: 'manual',
@@ -68,8 +69,8 @@ export default function NotesPage() {
 
     if (!error) {
       // XP & streak
-      await updateStreak(supabase, user.id)
-      const result = await addXp(supabase, user.id, XP_REWARDS.NOTE_MANUAL)
+      await updateStreak(supabase, session.user.id)
+      const result = await addXp(supabase, session.user.id, XP_REWARDS.NOTE_MANUAL)
       toast.success(`Заметка сохранена! +${XP_REWARDS.NOTE_MANUAL} XP`)
 
       // Generate review cards
@@ -80,12 +81,12 @@ export default function NotesPage() {
           body: JSON.stringify({
             noteText: noteText.trim(),
             bookId: noteBookId || null,
-            userId: user.id,
+            userId: session.user.id,
           }),
         })
       } catch {}
 
-      const newAchievements = await checkAchievements(supabase, user.id)
+      const newAchievements = await checkAchievements(supabase, session.user.id)
       for (const a of newAchievements) {
         toast.success(`🏆 ${a.icon} ${a.name}!`)
       }

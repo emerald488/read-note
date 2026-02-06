@@ -24,7 +24,6 @@ export function LogReadingDialog({ books, onComplete, children }: LogReadingDial
   const [pagesRead, setPagesRead] = useState('')
   const [duration, setDuration] = useState('')
   const [loading, setLoading] = useState(false)
-  const supabase = createClient()
 
   const readingBooks = books.filter((b) => b.status === 'reading')
 
@@ -33,21 +32,22 @@ export function LogReadingDialog({ books, onComplete, children }: LogReadingDial
     if (!bookId || !pagesRead) return
     setLoading(true)
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setLoading(false); return }
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) { setLoading(false); return }
 
     const pages = parseInt(pagesRead)
     const book = books.find((b) => b.id === bookId)
 
     // Calculate XP
-    const streakResult = await updateStreak(supabase, user.id)
+    const streakResult = await updateStreak(supabase, session.user.id)
     const streakBonus = (streakResult?.streak || 0) * XP_REWARDS.STREAK_BONUS_PER_DAY
     const baseXp = pages * XP_REWARDS.PAGES_READ
     const totalXp = baseXp + (streakResult?.isNew ? streakBonus : 0)
 
     // Create reading session
     await supabase.from('reading_sessions').insert({
-      user_id: user.id,
+      user_id: session.user.id,
       book_id: bookId,
       pages_read: pages,
       duration_minutes: duration ? parseInt(duration) : null,
@@ -67,16 +67,16 @@ export function LogReadingDialog({ books, onComplete, children }: LogReadingDial
 
       if (isFinished) {
         const finishXp = XP_REWARDS.BOOK_FINISHED
-        await addXp(supabase, user.id, totalXp + finishXp)
+        await addXp(supabase, session.user.id, totalXp + finishXp)
         toast.success(`Книга "${book.title}" прочитана! +${totalXp + finishXp} XP 🎉`)
       } else {
-        await addXp(supabase, user.id, totalXp)
+        await addXp(supabase, session.user.id, totalXp)
         toast.success(`+${totalXp} XP! ${streakResult?.isNew ? `🔥 Стрик: ${streakResult.streak} дн.` : ''}`)
       }
     }
 
     // Check achievements
-    const newAchievements = await checkAchievements(supabase, user.id)
+    const newAchievements = await checkAchievements(supabase, session.user.id)
     for (const a of newAchievements) {
       toast.success(`🏆 Достижение: ${a.icon} ${a.name}!`)
     }

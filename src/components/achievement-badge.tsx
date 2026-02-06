@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 
@@ -15,7 +16,7 @@ interface AchievementBadgeProps {
   index?: number
 }
 
-export function AchievementBadge({ achievement, earned = true, index = 0 }: AchievementBadgeProps) {
+export const AchievementBadge = memo(function AchievementBadge({ achievement, earned = true, index = 0 }: AchievementBadgeProps) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
@@ -38,4 +39,4 @@ export function AchievementBadge({ achievement, earned = true, index = 0 }: Achi
       </Card>
     </motion.div>
   )
-}
+})

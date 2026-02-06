@@ -4,7 +4,6 @@ import { useProfile } from '@/hooks/use-profile'
 import { useBooks } from '@/hooks/use-books'
 import { StreakFlame } from '@/components/streak-flame'
 import { XpProgressBar } from '@/components/xp-progress-bar'
-import { ReadingChart } from '@/components/reading-chart'
 import { BookCard } from '@/components/book-card'
 import { LogReadingDialog } from '@/components/log-reading-dialog'
 import { AddBookDialog } from '@/components/add-book-dialog'
@@ -14,6 +13,12 @@ import { BookOpen, Brain, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import dynamic from 'next/dynamic'
+
+const ReadingChart = dynamic(
+  () => import('@/components/reading-chart').then(m => ({ default: m.ReadingChart })),
+  { loading: () => <Skeleton className="h-[200px]" />, ssr: false }
+)
 
 function DashboardSkeleton() {
   return (
@@ -34,30 +39,32 @@ export default function DashboardPage() {
   const { books, loading: booksLoading, addBook, refetch: refetchBooks } = useBooks()
   const [reviewCount, setReviewCount] = useState(0)
   const [notesCount, setNotesCount] = useState(0)
-  const supabase = createClient()
 
   useEffect(() => {
     async function fetchCounts() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) return
 
       const today = new Date().toISOString().split('T')[0]
-      const { count: reviews } = await supabase
-        .from('review_cards')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .lte('next_review', today)
 
-      const { count: notes } = await supabase
-        .from('notes')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
+      const [{ count: reviews }, { count: notes }] = await Promise.all([
+        supabase
+          .from('review_cards')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', session.user.id)
+          .lte('next_review', today),
+        supabase
+          .from('notes')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', session.user.id),
+      ])
 
       setReviewCount(reviews || 0)
       setNotesCount(notes || 0)
     }
     fetchCounts()
-  }, [supabase])
+  }, [])
 
   if (profileLoading || booksLoading) return <DashboardSkeleton />
 

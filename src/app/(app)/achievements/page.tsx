@@ -10,24 +10,24 @@ import { Trophy } from 'lucide-react'
 export default function AchievementsPage() {
   const [earned, setEarned] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
     async function fetchAchievements() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setLoading(false); return }
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) { setLoading(false); return }
 
       const { data } = await supabase
         .from('achievements')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', session.user.id)
         .order('earned_at', { ascending: false })
 
       setEarned(data || [])
       setLoading(false)
     }
     fetchAchievements()
-  }, [supabase])
+  }, [])
 
   if (loading) {
     return (

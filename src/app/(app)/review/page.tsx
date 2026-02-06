@@ -13,15 +13,15 @@ import { toast } from 'sonner'
 
 export default function ReviewPage() {
   const { currentCard, remaining, isComplete, loading, answerCard, refetch } = useReview()
-  const supabase = createClient()
 
   const handleAnswer = async (button: 'forgot' | 'hard' | 'normal' | 'easy') => {
     if (!currentCard) return
     await answerCard(currentCard.id, button)
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      await addXp(supabase, user.id, XP_REWARDS.REVIEW_CARD)
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session?.user) {
+      await addXp(supabase, session.user.id, XP_REWARDS.REVIEW_CARD)
       toast.success(`+${XP_REWARDS.REVIEW_CARD} XP`)
     }
   }

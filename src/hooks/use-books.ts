@@ -20,16 +20,16 @@ export interface Book {
 export function useBooks(statusFilter?: string) {
   const [books, setBooks] = useState<Book[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   const fetchBooks = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setLoading(false); return }
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) { setLoading(false); return }
 
     let query = supabase
       .from('books')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
 
     if (statusFilter) {
@@ -39,20 +39,21 @@ export function useBooks(statusFilter?: string) {
     const { data } = await query
     setBooks(data || [])
     setLoading(false)
-  }, [supabase, statusFilter])
+  }, [statusFilter])
 
   useEffect(() => {
     fetchBooks()
   }, [fetchBooks])
 
   const addBook = async (book: { title: string; author?: string; total_pages?: number; status?: string }) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return null
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user) return null
 
     const { data, error } = await supabase
       .from('books')
       .insert({
-        user_id: user.id,
+        user_id: session.user.id,
         title: book.title,
         author: book.author || null,
         total_pages: book.total_pages || null,
@@ -69,6 +70,7 @@ export function useBooks(statusFilter?: string) {
   }
 
   const updateBook = async (id: string, updates: Partial<Book>) => {
+    const supabase = createClient()
     const { data, error } = await supabase
       .from('books')
       .update(updates)
@@ -83,6 +85,7 @@ export function useBooks(statusFilter?: string) {
   }
 
   const deleteBook = async (id: string) => {
+    const supabase = createClient()
     await supabase.from('books').delete().eq('id', id)
     setBooks((prev) => prev.filter((b) => b.id !== id))
   }

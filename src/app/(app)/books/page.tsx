@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useBooks } from '@/hooks/use-books'
 import { BookCard } from '@/components/book-card'
 import { AddBookDialog } from '@/components/add-book-dialog'
@@ -10,6 +10,14 @@ import { Skeleton } from '@/components/ui/skeleton'
 export default function BooksPage() {
   const { books, loading, addBook } = useBooks()
   const [tab, setTab] = useState('all')
+
+  const counts = useMemo(() => ({
+    all: books.length,
+    reading: books.filter(b => b.status === 'reading').length,
+    finished: books.filter(b => b.status === 'finished').length,
+    paused: books.filter(b => b.status === 'paused').length,
+    want: books.filter(b => b.status === 'want').length,
+  }), [books])
 
   if (loading) {
     return (
@@ -34,11 +42,11 @@ export default function BooksPage() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex w-full overflow-x-auto no-scrollbar">
-          <TabsTrigger value="all" className="flex-1 min-w-0">Все ({books.length})</TabsTrigger>
-          <TabsTrigger value="reading" className="flex-1 min-w-0">Читаю ({books.filter((b) => b.status === 'reading').length})</TabsTrigger>
-          <TabsTrigger value="finished" className="flex-1 min-w-0">Готово ({books.filter((b) => b.status === 'finished').length})</TabsTrigger>
-          <TabsTrigger value="paused" className="flex-1 min-w-0">Пауза ({books.filter((b) => b.status === 'paused').length})</TabsTrigger>
-          <TabsTrigger value="want" className="flex-1 min-w-0">Хочу ({books.filter((b) => b.status === 'want').length})</TabsTrigger>
+          <TabsTrigger value="all" className="flex-1 min-w-0">Все ({counts.all})</TabsTrigger>
+          <TabsTrigger value="reading" className="flex-1 min-w-0">Читаю ({counts.reading})</TabsTrigger>
+          <TabsTrigger value="finished" className="flex-1 min-w-0">Готово ({counts.finished})</TabsTrigger>
+          <TabsTrigger value="paused" className="flex-1 min-w-0">Пауза ({counts.paused})</TabsTrigger>
+          <TabsTrigger value="want" className="flex-1 min-w-0">Хочу ({counts.want})</TabsTrigger>
         </TabsList>
         <TabsContent value={tab} className="mt-4">
           {filtered.length === 0 ? (
