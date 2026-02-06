@@ -42,7 +42,9 @@ export function AddBookDialog({ onAdd }: AddBookDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="gap-2">
-          <Plus className="h-4 w-4" /> Добавить книгу
+          <Plus className="h-4 w-4" />
+          <span className="hidden sm:inline">Добавить книгу</span>
+          <span className="sm:hidden">Книга</span>
         </Button>
       </DialogTrigger>
       <DialogContent>

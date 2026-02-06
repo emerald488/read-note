@@ -94,7 +94,9 @@ export function LogReadingDialog({ books, onComplete, children }: LogReadingDial
       <DialogTrigger asChild>
         {children || (
           <Button variant="outline" className="gap-2">
-            <BookOpen className="h-4 w-4" /> Записать чтение
+            <BookOpen className="h-4 w-4" />
+            <span className="hidden sm:inline">Записать чтение</span>
+            <span className="sm:hidden">Записать</span>
           </Button>
         )}
       </DialogTrigger>

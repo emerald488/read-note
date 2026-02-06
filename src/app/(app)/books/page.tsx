@@ -33,12 +33,12 @@ export default function BooksPage() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="all">Все ({books.length})</TabsTrigger>
-          <TabsTrigger value="reading">Читаю ({books.filter((b) => b.status === 'reading').length})</TabsTrigger>
-          <TabsTrigger value="finished">Готово ({books.filter((b) => b.status === 'finished').length})</TabsTrigger>
-          <TabsTrigger value="paused">Пауза ({books.filter((b) => b.status === 'paused').length})</TabsTrigger>
-          <TabsTrigger value="want">Хочу ({books.filter((b) => b.status === 'want').length})</TabsTrigger>
+        <TabsList className="flex w-full overflow-x-auto no-scrollbar">
+          <TabsTrigger value="all" className="flex-1 min-w-0">Все ({books.length})</TabsTrigger>
+          <TabsTrigger value="reading" className="flex-1 min-w-0">Читаю ({books.filter((b) => b.status === 'reading').length})</TabsTrigger>
+          <TabsTrigger value="finished" className="flex-1 min-w-0">Готово ({books.filter((b) => b.status === 'finished').length})</TabsTrigger>
+          <TabsTrigger value="paused" className="flex-1 min-w-0">Пауза ({books.filter((b) => b.status === 'paused').length})</TabsTrigger>
+          <TabsTrigger value="want" className="flex-1 min-w-0">Хочу ({books.filter((b) => b.status === 'want').length})</TabsTrigger>
         </TabsList>
         <TabsContent value={tab} className="mt-4">
           {filtered.length === 0 ? (
