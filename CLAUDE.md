@@ -76,6 +76,28 @@ Webhook at `/api/telegram`. Voice messages go through: download → Supabase Sto
 - `cn()` from `@/lib/utils` for merging Tailwind classes
 - Toast notifications via sonner
 
+## Deployment
+
+Автодеплой с GitHub отключён. Деплой выполняется вручную через Vercel CLI.
+
+```bash
+# Слинковать проект (один раз)
+vercel link --yes --project=read-note
+
+# Получить env-переменные для локальной разработки
+vercel env pull .env.local --yes --environment=production
+
+# Деплой в production
+vercel --prod --yes
+```
+
+**После изменения переменных окружения** в Vercel Dashboard — обязательно редеплой (`vercel --prod --yes`), иначе новые значения не применятся.
+
+**Telegram webhook:** если меняется `TELEGRAM_WEBHOOK_SECRET`, нужно обновить webhook:
+```bash
+curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://read-note-puce.vercel.app/api/telegram&secret_token=<SECRET>"
+```
+
 ## Skills
 
 **Всегда используй установленные skills через инструмент Skill вместо ручного выполнения.** Скиллы содержат экспертные знания и best practices, которые нужно применять при соответствующих задачах. Установлены из [skills.sh](https://skills.sh).
