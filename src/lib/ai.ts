@@ -18,7 +18,7 @@ export async function transcribeAudio(audioBuffer: Buffer, filename: string): Pr
 export async function formatNote(rawText: string, bookTitle?: string): Promise<string> {
   const context = bookTitle ? ` о книге "${bookTitle}"` : ''
   const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-4.1-mini',
     messages: [
       {
         role: 'system',
@@ -37,7 +37,7 @@ export async function generateReviewCards(
 ): Promise<{ question: string; answer: string }[]> {
   const context = bookTitle ? ` из книги "${bookTitle}"` : ''
   const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-4.1-mini',
     messages: [
       {
         role: 'system',
