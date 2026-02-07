@@ -21,7 +21,7 @@ export default function NotesPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
-  const [notes, setNotes] = useState<{ id: string; formatted_text: string | null; manual_text: string | null; source: 'voice' | 'manual'; page_reference: number | null; created_at: string; book?: { title: string } | null }[]>([])
+  const [notes, setNotes] = useState<{ id: string; formatted_text: string | null; raw_transcription: string | null; manual_text: string | null; voice_file_url: string | null; source: 'voice' | 'manual'; page_reference: number | null; created_at: string; book?: { title: string } | null }[]>([])
   const [books, setBooks] = useState<Book[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState(searchParams.get('q') || '')

@@ -19,6 +19,59 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const bot = getBot()
 
+    // Handle callback query (inline button clicks)
+    const callbackQuery = body.callback_query
+    if (callbackQuery) {
+      const chatId = callbackQuery.message.chat.id
+      const supabase = await createServiceClient()
+
+      // Find user by chat_id
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('telegram_chat_id', chatId)
+        .single()
+
+      if (!profile) {
+        await bot.api.answerCallbackQuery(callbackQuery.id, {
+          text: '❌ Аккаунт не привязан',
+          show_alert: true,
+        })
+        return NextResponse.json({ ok: true })
+      }
+
+      const data = callbackQuery.data || ''
+
+      // Handle "show full note" button
+      if (data.startsWith('show_note_')) {
+        const noteId = data.replace('show_note_', '')
+
+        const { data: note } = await supabase
+          .from('notes')
+          .select('formatted_text')
+          .eq('id', noteId)
+          .eq('user_id', profile.id)
+          .single()
+
+        if (note?.formatted_text) {
+          // Extract original message header (XP, streak, achievements)
+          const originalText = callbackQuery.message.text || ''
+          const header = originalText.split('\n\n📝')[0] || ''
+
+          await bot.api.editMessageText(
+            callbackQuery.message.chat.id,
+            callbackQuery.message.message_id,
+            `${header}\n\n📝 <b>Полная заметка:</b>\n${note.formatted_text}`,
+            { parse_mode: 'HTML' }
+          )
+        }
+
+        await bot.api.answerCallbackQuery(callbackQuery.id)
+      }
+
+      return NextResponse.json({ ok: true })
+    }
+
     const message = body.message
     if (!message) return NextResponse.json({ ok: true })
 
@@ -182,8 +235,24 @@ export async function POST(request: NextRequest) {
           ? `\n\n🏆 Новые достижения: ${newAchievements.map((a) => `${a.icon} ${a.name}`).join(', ')}`
           : ''
 
-        await sendTelegramMessage(chatId,
-          `✅ Заметка сохранена! +${XP_REWARDS.NOTE_VOICE} XP\n🔥 Стрик: ${streakResult?.streak || 0} дн.${achievementText}\n\n📝 <b>Превью:</b>\n${formattedText.substring(0, 300)}${formattedText.length > 300 ? '...' : ''}`)
+        const header = `✅ Заметка сохранена! +${XP_REWARDS.NOTE_VOICE} XP\n🔥 Стрик: ${streakResult?.streak || 0} дн.${achievementText}`
+
+        if (formattedText.length > 300) {
+          // Send with "Show full" button for long notes
+          await bot.api.sendMessage(chatId,
+            `${header}\n\n📝 <b>Превью:</b>\n${formattedText.substring(0, 300)}...`,
+            {
+              parse_mode: 'HTML',
+              reply_markup: {
+                inline_keyboard: [[
+                  { text: '📖 Показать полностью', callback_data: `show_note_${note!.id}` }
+                ]]
+              }
+            })
+        } else {
+          // Send full note for short notes
+          await sendTelegramMessage(chatId, `${header}\n\n📝 ${formattedText}`)
+        }
 
       } catch (error) {
         console.error('Voice processing error:', error)

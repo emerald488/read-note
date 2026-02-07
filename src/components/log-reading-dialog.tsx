@@ -21,23 +21,29 @@ interface LogReadingDialogProps {
 export function LogReadingDialog({ books, onComplete, children }: LogReadingDialogProps) {
   const [open, setOpen] = useState(false)
   const [bookId, setBookId] = useState('')
-  const [pagesRead, setPagesRead] = useState('')
-  const [duration, setDuration] = useState('')
+  const [stoppedAtPage, setStoppedAtPage] = useState('')
   const [loading, setLoading] = useState(false)
 
   const readingBooks = books.filter((b) => b.status === 'reading')
+  const selectedBook = books.find((b) => b.id === bookId)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!bookId || !pagesRead) return
+    if (!bookId || !stoppedAtPage || !selectedBook) return
+
+    const newPage = parseInt(stoppedAtPage)
+    if (newPage <= selectedBook.current_page) {
+      toast.error(`Страница должна быть больше текущей (${selectedBook.current_page})`)
+      return
+    }
+
     setLoading(true)
 
     const supabase = createClient()
     const { data: { session } } = await supabase.auth.getSession()
     if (!session?.user) { setLoading(false); return }
 
-    const pages = parseInt(pagesRead)
-    const book = books.find((b) => b.id === bookId)
+    const pages = newPage - selectedBook.current_page
 
     // Streak + session creation in parallel
     const [streakResult] = await Promise.all([
@@ -46,7 +52,6 @@ export function LogReadingDialog({ books, onComplete, children }: LogReadingDial
         user_id: session.user.id,
         book_id: bookId,
         pages_read: pages,
-        duration_minutes: duration ? parseInt(duration) : null,
         xp_earned: 0,
       }),
     ])
@@ -55,24 +60,21 @@ export function LogReadingDialog({ books, onComplete, children }: LogReadingDial
     const totalXp = baseXp + (streakResult?.isNew ? streakBonus : 0)
 
     // Update book progress
-    if (book) {
-      const newPage = Math.min(book.current_page + pages, book.total_pages || book.current_page + pages)
-      const isFinished = book.total_pages && newPage >= book.total_pages
+    const isFinished = selectedBook.total_pages && newPage >= selectedBook.total_pages
 
-      await supabase.from('books').update({
-        current_page: newPage,
-        status: isFinished ? 'finished' : 'reading',
-        finished_at: isFinished ? new Date().toISOString().split('T')[0] : null,
-      }).eq('id', bookId)
+    await supabase.from('books').update({
+      current_page: newPage,
+      status: isFinished ? 'finished' : 'reading',
+      finished_at: isFinished ? new Date().toISOString().split('T')[0] : null,
+    }).eq('id', bookId)
 
-      if (isFinished) {
-        const finishXp = XP_REWARDS.BOOK_FINISHED
-        await addXp(supabase, session.user.id, totalXp + finishXp)
-        toast.success(`Книга "${book.title}" прочитана! +${totalXp + finishXp} XP 🎉`)
-      } else {
-        await addXp(supabase, session.user.id, totalXp)
-        toast.success(`+${totalXp} XP! ${streakResult?.isNew ? `🔥 Стрик: ${streakResult.streak} дн.` : ''}`)
-      }
+    if (isFinished) {
+      const finishXp = XP_REWARDS.BOOK_FINISHED
+      await addXp(supabase, session.user.id, totalXp + finishXp)
+      toast.success(`Книга "${selectedBook.title}" прочитана! +${totalXp + finishXp} XP 🎉`)
+    } else {
+      await addXp(supabase, session.user.id, totalXp)
+      toast.success(`+${totalXp} XP за ${pages} стр.! ${streakResult?.isNew ? `🔥 Стрик: ${streakResult.streak} дн.` : ''}`)
     }
 
     // Check achievements
@@ -83,8 +85,7 @@ export function LogReadingDialog({ books, onComplete, children }: LogReadingDial
 
     setLoading(false)
     setBookId('')
-    setPagesRead('')
-    setDuration('')
+    setStoppedAtPage('')
     setOpen(false)
     onComplete?.()
   }
@@ -121,14 +122,27 @@ export function LogReadingDialog({ books, onComplete, children }: LogReadingDial
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="pages">Прочитано страниц *</Label>
-            <Input id="pages" type="number" value={pagesRead} onChange={(e) => setPagesRead(e.target.value)} placeholder="0" min="1" required />
+            <Label htmlFor="pages">На какой странице остановились? *</Label>
+            <Input
+              id="pages"
+              type="number"
+              value={stoppedAtPage}
+              onChange={(e) => setStoppedAtPage(e.target.value)}
+              placeholder={selectedBook ? String(selectedBook.current_page + 1) : '0'}
+              min={selectedBook ? selectedBook.current_page + 1 : 1}
+              max={selectedBook?.total_pages || undefined}
+              required
+            />
+            {selectedBook && (
+              <p className="text-xs text-muted-foreground">
+                Сейчас на стр. {selectedBook.current_page}{selectedBook.total_pages ? ` из ${selectedBook.total_pages}` : ''}
+                {stoppedAtPage && parseInt(stoppedAtPage) > selectedBook.current_page && (
+                  <> — прочитано: {parseInt(stoppedAtPage) - selectedBook.current_page} стр.</>
+                )}
+              </p>
+            )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="duration">Время чтения (мин.)</Label>
-            <Input id="duration" type="number" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="30" min="1" />
-          </div>
-          <Button type="submit" className="w-full" disabled={loading || !bookId || !pagesRead}>
+          <Button type="submit" className="w-full" disabled={loading || !bookId || !stoppedAtPage}>
             {loading ? 'Сохранение...' : 'Записать'}
           </Button>
         </form>

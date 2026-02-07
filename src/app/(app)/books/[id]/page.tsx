@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button'
 import { NoteCard } from '@/components/note-card'
 import { LogReadingDialog } from '@/components/log-reading-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ArrowLeft, BookOpen, Calendar, FileText } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { ArrowLeft, BookOpen, Calendar, FileText, Pencil, Check, X } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -18,8 +19,10 @@ import { toast } from 'sonner'
 export default function BookDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [book, setBook] = useState<Book | null>(null)
-  const [notes, setNotes] = useState<{ id: string; formatted_text: string | null; manual_text: string | null; source: 'voice' | 'manual'; page_reference: number | null; created_at: string; book?: { title: string } | null }[]>([])
+  const [notes, setNotes] = useState<{ id: string; formatted_text: string | null; raw_transcription: string | null; manual_text: string | null; voice_file_url: string | null; source: 'voice' | 'manual'; page_reference: number | null; created_at: string; book?: { title: string } | null }[]>([])
   const [loading, setLoading] = useState(true)
+  const [editingPage, setEditingPage] = useState(false)
+  const [pageInput, setPageInput] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -57,6 +60,33 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
     if (data) {
       setBook(data)
       toast.success('Статус обновлён')
+    }
+  }
+
+  const refetchBook = async () => {
+    const supabase = createClient()
+    const { data } = await supabase.from('books').select('*').eq('id', id).single()
+    if (data) setBook(data)
+  }
+
+  const updateCurrentPage = async () => {
+    if (!book) return
+    const newPage = parseInt(pageInput)
+    if (isNaN(newPage) || newPage < 0 || (book.total_pages && newPage > book.total_pages)) {
+      toast.error(`Введите число от 0 до ${book.total_pages || '∞'}`)
+      return
+    }
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('books')
+      .update({ current_page: newPage })
+      .eq('id', book.id)
+      .select()
+      .single()
+    if (data) {
+      setBook(data)
+      setEditingPage(false)
+      toast.success('Страница обновлена')
     }
   }
 
@@ -131,9 +161,40 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
 
           {book.total_pages && (
             <div className="space-y-2">
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between items-center text-sm">
                 <span>Прогресс</span>
-                <span>{book.current_page} / {book.total_pages} ({progress}%)</span>
+                {editingPage ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      value={pageInput}
+                      onChange={(e) => setPageInput(e.target.value)}
+                      className="w-20 h-7 text-sm"
+                      min={0}
+                      max={book.total_pages}
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') updateCurrentPage()
+                        if (e.key === 'Escape') setEditingPage(false)
+                      }}
+                    />
+                    <span className="text-muted-foreground">/ {book.total_pages}</span>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={updateCurrentPage}>
+                      <Check className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingPage(false)}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <button
+                    className="flex items-center gap-1.5 hover:text-primary transition-colors"
+                    onClick={() => { setPageInput(String(book.current_page)); setEditingPage(true) }}
+                  >
+                    <span>{book.current_page} / {book.total_pages} ({progress}%)</span>
+                    <Pencil className="h-3 w-3 opacity-50" />
+                  </button>
+                )}
               </div>
               <div className="h-3 rounded-full bg-secondary overflow-hidden">
                 <motion.div
@@ -147,7 +208,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
           )}
 
           <div className="flex items-center justify-between">
-            <LogReadingDialog books={[book]} onComplete={() => router.refresh()}>
+            <LogReadingDialog books={[book]} onComplete={refetchBook}>
               <Button className="gap-2">
                 <BookOpen className="h-4 w-4" /> Записать чтение
               </Button>

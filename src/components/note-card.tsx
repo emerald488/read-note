@@ -10,7 +10,9 @@ interface NoteCardProps {
   note: {
     id: string
     formatted_text: string | null
+    raw_transcription?: string | null
     manual_text: string | null
+    voice_file_url?: string | null
     source: 'voice' | 'manual'
     page_reference: number | null
     created_at: string
@@ -25,6 +27,8 @@ export const NoteCard = memo(function NoteCard({ note, index = 0 }: NoteCardProp
   const text = note.formatted_text || note.manual_text || ''
   const isLong = text.length > PREVIEW_LENGTH
   const [expanded, setExpanded] = useState(false)
+  const [showOriginal, setShowOriginal] = useState(false)
+  const hasOriginal = note.source === 'voice' && note.raw_transcription && note.formatted_text
 
   return (
     <motion.div
@@ -76,6 +80,34 @@ export const NoteCard = memo(function NoteCard({ note, index = 0 }: NoteCardProp
               </p>
             </motion.div>
           </AnimatePresence>
+          {note.voice_file_url && (
+            <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+              <audio controls preload="none" className="w-full h-8 [&::-webkit-media-controls-panel]:bg-secondary/50" src={note.voice_file_url} />
+            </div>
+          )}
+          {hasOriginal && (
+            <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+              <button
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                onClick={() => setShowOriginal(!showOriginal)}
+              >
+                {showOriginal ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                Оригинальная расшифровка
+              </button>
+              <AnimatePresence>
+                {showOriginal && (
+                  <motion.p
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="text-xs text-muted-foreground mt-1.5 whitespace-pre-wrap overflow-hidden"
+                  >
+                    {note.raw_transcription}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
           <div className="flex items-center justify-between mt-2">
             <p className="text-xs text-muted-foreground">
               {new Date(note.created_at).toLocaleDateString('ru-RU', {
