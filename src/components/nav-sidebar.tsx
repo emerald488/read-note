@@ -28,14 +28,14 @@ export function NavSidebar() {
   }
 
   return (
-    <aside className="hidden md:flex w-64 border-r border-border bg-sidebar flex-col h-screen sticky top-0">
-      <div className="p-6 pb-4">
+    <aside className="hidden md:flex w-64 border-r border-border bg-sidebar flex-col h-screen fixed left-0 top-0 overflow-y-auto z-40">
+      <div className="p-6 pb-4 flex-shrink-0">
         <h1 className="font-display text-xl font-bold tracking-tight text-foreground">
           <span className="text-primary">Читательский</span> Дневник
         </h1>
         <p className="text-[11px] text-muted-foreground mt-0.5 tracking-widest uppercase">Читай каждый день</p>
       </div>
-      <nav className="flex-1 px-3 space-y-0.5">
+      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href)
           return (
@@ -55,7 +55,7 @@ export function NavSidebar() {
           )
         })}
       </nav>
-      <div className="p-3 border-t border-border space-y-0.5">
+      <div className="p-3 border-t border-border space-y-0.5 flex-shrink-0">
         <div className="flex items-center gap-3 px-3 py-1.5 text-sm font-medium text-muted-foreground">
           <Palette className="h-5 w-5" />
           <span>Тема</span>
