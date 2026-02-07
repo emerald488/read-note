@@ -17,11 +17,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    console.log('[Telegram] Webhook received:', JSON.stringify(body, null, 2))
     const bot = getBot()
 
     // Handle callback query (inline button clicks)
     const callbackQuery = body.callback_query
     if (callbackQuery) {
+      console.log('[Telegram] Processing callback_query:', callbackQuery.data)
       const chatId = callbackQuery.message.chat.id
       const supabase = await createServiceClient()
 
@@ -44,29 +46,56 @@ export async function POST(request: NextRequest) {
 
       // Handle "show full note" button
       if (data.startsWith('show_note_')) {
-        const noteId = data.replace('show_note_', '')
+        try {
+          const noteId = data.replace('show_note_', '')
+          console.log('[Telegram] Show full note requested:', noteId, 'by user:', profile.id)
 
-        const { data: note } = await supabase
-          .from('notes')
-          .select('formatted_text')
-          .eq('id', noteId)
-          .eq('user_id', profile.id)
-          .single()
+          const { data: note, error } = await supabase
+            .from('notes')
+            .select('formatted_text')
+            .eq('id', noteId)
+            .eq('user_id', profile.id)
+            .single()
 
-        if (note?.formatted_text) {
+          if (error) {
+            console.error('[Telegram] Error fetching note:', error)
+            await bot.api.answerCallbackQuery(callbackQuery.id, {
+              text: '❌ Заметка не найдена',
+              show_alert: true,
+            })
+            return NextResponse.json({ ok: true })
+          }
+
+          if (!note?.formatted_text) {
+            console.error('[Telegram] Note has no formatted_text:', noteId)
+            await bot.api.answerCallbackQuery(callbackQuery.id, {
+              text: '❌ Заметка пустая',
+              show_alert: true,
+            })
+            return NextResponse.json({ ok: true })
+          }
+
           // Extract original message header (XP, streak, achievements)
           const originalText = callbackQuery.message.text || ''
           const header = originalText.split('\n\n📝')[0] || ''
 
+          console.log('[Telegram] Editing message to show full note')
           await bot.api.editMessageText(
             callbackQuery.message.chat.id,
             callbackQuery.message.message_id,
             `${header}\n\n📝 <b>Полная заметка:</b>\n${note.formatted_text}`,
             { parse_mode: 'HTML' }
           )
-        }
 
-        await bot.api.answerCallbackQuery(callbackQuery.id)
+          await bot.api.answerCallbackQuery(callbackQuery.id)
+          console.log('[Telegram] Successfully showed full note:', noteId)
+        } catch (error) {
+          console.error('[Telegram] Error handling show_note callback:', error)
+          await bot.api.answerCallbackQuery(callbackQuery.id, {
+            text: '❌ Произошла ошибка',
+            show_alert: true,
+          })
+        }
       }
 
       return NextResponse.json({ ok: true })
@@ -310,7 +339,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('Telegram webhook error:', error)
+    console.error('[Telegram] Webhook error:', error)
+    console.error('[Telegram] Error stack:', error instanceof Error ? error.stack : 'No stack')
     return NextResponse.json({ ok: true })
   }
 }
